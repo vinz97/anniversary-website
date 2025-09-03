@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>B&D ❤️</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Favicon personalizzata -->
+  <link rel="icon" type="image/png" href="https://img.icons8.com/office/30/bear.png" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  
+  <style>
+ body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin: 10px;
+      text-align: center;
+    }
+    #map {
+      height: 80vh;
+      width: 90vw;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    /* Stile popup Leaflet per le foto */
+    .popup-img {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      margin-top: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    }
+
+    /* Overlay fullscreen per immagine grande */
+    #img-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+    }
+    #img-overlay img {
+      max-width: 90%;
+      max-height: 80%;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.4);
+    }
+    #close-btn {
+      color: white;
+      font-size: 2rem;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    @media print {
+      body { margin: 0; }
+      #map { height: 100vh; width: 100vw; }
+      h1 { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Bubu & Dudu Kissing Places ❤️</h1>
+  <div id="map"></div>
+  
+    <!-- Overlay per foto grande -->
+  <div id="img-overlay">
+    <img id="big-img" src="" alt="Foto città">
+    <div id="close-btn">✖</div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  
+  <script>
+    // Inizializza la mappa centrata sull'Italia
+    const map = L.map('map').setView([41.8719, 12.5674], 6);
+
+    // Aggiunge il layer della mappa (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Definisci un'icona personalizzata
+    const heartIcon = L.icon({
+      iconUrl: "https://img.icons8.com/emoji/48/kiss-man-woman.png", // ❤️ icona cuore
+      iconSize: [30, 30],    // Dimensioni icona
+      iconAnchor: [15, 30],  // Punto dell'icona che tocca la mappa
+      popupAnchor: [0, -30]  // Punto da cui esce il popup
+    });
+
+    // Lista delle città visitate
+    const cities = [
+      { name: "Milano", coords: [45.46408,9.18882], date: "2021-05", photo: "src/venezia.jpeg" },
+	  { name: "Rho", coords: [45.52443,9.04103], date: "2021-05"},
+	  { name: "Monza", coords: [45.59348,9.27428], date: "2023-10"},
+	  { name: "Marzamemi", coords: [36.74298,15.11843], date: "2021-08"},
+	  { name: "San Lorenzo", coords: [36.76735,15.09609], date: "2021-08"},
+	  { name: "Vendicari", coords: [36.80290,15.09922], date: "2021-08"},
+	  { name: "Marzamemi", coords: [36.74298,15.11843], date: "2021-08"},
+	  { name: "Como", coords: [45.81343,9.07591], date: "2022-11"},
+	  { name: "Stresa", coords: [45.88453,8.54106], date: "2023-09"},
+	  { name: "Isola Bella", coords: [45.89606,8.52633], date: "2023-09"},
+	  { name: "Lipari", coords: [38.47644,14.95570], date: "2024-08"},
+	  { name: "Vulcano", coords: [38.41788,14.95922], date: "2024-08"},
+	  { name: "Stromboli", coords: [38.78199,15.29444], date: "2024-08"},
+	  { name: "Panarea", coords: [38.63783,15.07688], date: "2024-08"},
+	  { name: "Salina", coords: [38.55892,14.87208], date: "2024-08"},
+	  { name: "Gardaland", coords: [45.45666,10.71156], date: "2024-11"},
+	  { name: "Donnafugata", coords: [36.88206,14.56439], date: "2024-04"},
+	  { name: "Cefalù", coords: [38.04059,14.02468], date: "2023-08"},
+	  { name: "Trapani", coords: [37.98279,12.49772], date: "2025-08"},
+	  { name: "San Vito Lo Capo", coords: [38.17067,12.73333], date: "2025-08"},
+	  { name: "Favignana", coords: [37.93301,12.32663], date: "2025-08"},
+	  { name: "Macari", coords: [38.13125,12.74038], date: "2025-08"},
+	  { name: "Erice", coords: [38.03817,12.58718], date: "2025-08"},
+	  { name: "Catania", coords: [37.50764,15.08616]},
+	  { name: "Vizzini", coords: [37.16122,14.74893], date: "2019-09"},
+	  { name: "Taormina", coords: [37.85119,15.28298], date: "2023-04"},
+	  { name: "Caltagirone", coords: [37.23820,14.51260]},
+	  { name: "Etnaland", coords: [37.53312,14.93427]},
+	  { name: "Ragusa", coords: [36.92692,14.70546]},
+	  { name: "Marina di Ragusa", coords: [36.78341,14.55448]},
+	  { name: "Puntasecca", coords: [36.78660,14.49595]},
+	  { name: "Licodia Eubea", coords: [37.15622,14.70349]},
+	  { name: "Grammichele", coords: [37.21458,14.63663]},
+	  { name: "Sortino", coords: [37.15621,15.02703]},
+	  { name: "Ortigia", coords: [37.06020,15.29513]},
+      { name: "Venezia", coords: [45.43406,12.33827], date: "2025-05" },
+      { name: "Bergamo", coords: [45.70440,9.66353], date: "2025-02" }
+    ];
+
+ // Generazione popup dinamico
+  cities.forEach(city => {
+    let popupContent = `<b>${city.name}</b><br>Data: ${city.date}`;
+    if (city.photo) {
+      popupContent += `<br><img src="${city.photo}" class="popup-img" onclick="openImage('${city.photo}')">`;
+    }
+
+    L.marker(city.coords, { icon: heartIcon })
+      .addTo(map)
+      .bindPopup(popupContent);
+  });
+
+  // Gestione overlay immagine grande
+  const overlay = document.getElementById('img-overlay');
+  const bigImg = document.getElementById('big-img');
+  const closeBtn = document.getElementById('close-btn');
+
+  window.openImage = function (src) {
+    bigImg.src = src;
+    overlay.style.display = "flex";
+  };
+
+  closeBtn.addEventListener("click", () => {
+    overlay.style.display = "none";
+    bigImg.src = "";
+  });
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.style.display = "none";
+      bigImg.src = "";
+    }
+  });
+  </script>
+</body>
+</html>
